@@ -9,8 +9,8 @@ var sync = new function() {
 
     this.init = function() {
         var indices = Reveal.getIndices();
-        this.lastH = indices.indexh;
-        this.lastV = indices.indexv;
+        this.lastH = indices.h;
+        this.lastV = indices.v;
 
         this.tid = setTimeout(this.check, CHECK_MS);
         Reveal.addEventListener( 'slidechanged', this.onSlideChanged);
@@ -33,12 +33,16 @@ var sync = new function() {
 
                 var indices = Reveal.getIndices();
                 if(indices.h != pos[0] || indices.v != pos[1] || sync.lastF != pos[2]) {
-                    sync.ignoreNext = true;
+//                    sync.ignoreNext = true;
+                    sync.lastH = pos[0];
+                    sync.lastV = pos[1];
+                    sync.lastF = pos[2];
                     Reveal.slide(pos[0], pos[1], pos[2]);
                 }
            }
         }
-        req.open("GET", "controller.php?get=1", true);
+        req.timeout = 500;
+        req.open("GET", "controller.php?get=1", false);
         req.send(null);
         sync.tid = setTimeout(sync.check, CHECK_MS);
     }
@@ -56,7 +60,8 @@ var sync = new function() {
         var h = encodeURIComponent(indexh);
         var v = encodeURIComponent(indexv);
         var f = encodeURIComponent(indexf);
-        req.open("GET", "controller.php?indexh="+h+"&indexv="+v+"&indexf="+f, true);
+        req.timeout = 2000;
+        req.open("GET", "controller.php?indexh="+h+"&indexv="+v+"&indexf="+f, false);
         req.send(null);
     }
 
@@ -77,8 +82,10 @@ var sync = new function() {
     }
 
     this.onFragmentHidden = function(event) {
-        sync.lastF--;
-        writePos(sync.lastH, sync.lastV, sync.lastF);
+        if(sync.lastF > 0) {
+            sync.lastF--;
+            writePos(sync.lastH, sync.lastV, sync.lastF);
+        }
     }
 
 }
